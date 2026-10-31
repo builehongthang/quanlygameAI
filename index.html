@@ -3,242 +3,234 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vui Học Cùng AI - TIỂU HỌC</title>
+  <title>Vui Học Cùng AI - Tiểu Học</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * {
-      font-family: 'Times New Roman', Times, serif;
-      -webkit-tap-highlight-color: transparent;
+    /* Áp dụng phông chữ Times New Roman cho toàn trang theo yêu cầu */
+    body, * {
+      font-family: 'Times New Roman', Times, serif !important;
     }
-    .hero-banner {
-      background: linear-gradient(105deg, #4f46e5 0%, #7c3aed 45%, #ec4899 100%);
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
     }
-    .sparkle-shape {
-      position: absolute;
-      right: 5%;
-      top: 50%;
-      transform: translateY(-50%);
-      opacity: 0.18;
-      pointer-events: none;
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
     }
   </style>
 </head>
-<body class="bg-[#f8fafc] text-slate-800 min-h-screen pb-16 selection:bg-indigo-100">
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen flex flex-col antialiased selection:bg-rose-100 selection:text-rose-600">
 
-  <!-- ================= TOP NAVBAR ================= -->
-  <header class="bg-white border-b border-slate-100 sticky top-0 z-40">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+  <!-- ================= BANNER GIÁO VIÊN (CHỈ HIỆN KHI ĐĂNG NHẬP) ================= -->
+  <div id="teacherBanner" class="hidden bg-slate-900 text-white px-4 py-2.5 shadow-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="font-bold text-amber-300">CHẾ ĐỘ GIÁO VIÊN:</span>
+        <span class="text-slate-300 hidden sm:inline">Bạn có thể sửa tên chủ đề, thêm/sửa/xóa bài học trực tiếp.</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="exportDataToFile()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 border border-slate-700 transition">
+          💾 Xuất file JSON
+        </button>
+        <label class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 border border-slate-700 cursor-pointer transition">
+          📂 Nhập JSON
+          <input type="file" accept=".json" onchange="importDataFromFile(event)" class="hidden">
+        </label>
+        <button type="button" onclick="exitTeacherMode()" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition ml-2 shadow-sm">
+          Khóa / Thoát GV
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HEADER CHÍNH ================= -->
+  <header class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-5xl mx-auto px-4 py-2 flex items-center justify-between">
       
-      <!-- Logo & Tiêu đề chính -->
-    <div class="flex items-center gap-3 select-none">
-      <div id="robotTrigger" onclick="handleRobotClick()" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl shadow-md shadow-blue-200 cursor-pointer active:scale-90 transition-transform select-none" title="Chạm 3 lần để mở Chế độ GV">
-        🤖
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
-            Vui Học Cùng AI
-          </span>
-          <span class="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-sm">
-            TIỂU HỌC
-          </span>
+      <!-- Logo Robot (Bấm 3 lần liên tiếp để mở bảng nhập mã PIN Giáo Viên) -->
+      <div class="flex items-center gap-2.5 select-none">
+        <div id="secretRobotBtn" onclick="handleSecretRobotClick()" class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center text-white text-xl shadow-xs cursor-pointer transition-all active:scale-90" title="Bấm 3 lần để mở Chế độ Giáo viên">
+          🤖
         </div>
-        <p class="text-xs text-slate-400 font-medium mt-1">Cổng bài học & ứng dụng tương tác thông minh</p>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-tight">Vui Học Cùng AI</h1>
+            <span class="bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Tiểu Học</span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-tight">Cổng bài học & ứng dụng tương tác thông minh</p>
+        </div>
+      </div>
+
+      <!-- Nút âm thanh -->
+      <div class="flex items-center gap-2">
+        <button type="button" id="soundToggleBtn" onclick="toggleSound()" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 transition shadow-xs text-xs" title="Bật/Tắt âm thanh tương tác">
+          🔊
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= NỘI DUNG CHÍNH ================= -->
+  <main class="max-w-5xl mx-auto px-4 py-3.5 flex-1 w-full space-y-4">
+
+    <!-- HERO BANNER GRADIENT XANH LÁ CÂY TƯƠI ĐẸP & MÁT MẮT (GỌN GÀNG) -->
+    <div class="rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-teal-600 px-5 py-4 sm:px-6 sm:py-5 text-white shadow-md relative overflow-hidden">
+      <!-- Họa tiết trang trí -->
+      <div class="absolute -right-4 -bottom-4 text-white/10 text-8xl select-none pointer-events-none">🌿</div>
+      <div class="relative z-10 max-w-xl">
+        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-[10px] font-bold tracking-wide mb-1.5">
+          <span>🌟</span> Chào mừng các nhà thám hiểm nhí!
+        </div>
+        <h2 class="text-lg sm:text-2xl font-black mb-1 tracking-tight leading-snug">Hôm nay lớp mình học khối mấy nào?</h2>
+        <p class="text-white/90 text-xs sm:text-sm font-medium">Chạm vào ô Khối của lớp mình để mở kho bài giảng và ứng dụng AI nhé! 🚀</p>
       </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="flex items-center gap-2">
-      <!-- Nút thoát GV (chỉ hiện khi đang bật) -->
-      <button type="button" id="exitTeacherBtn" onclick="exitTeacherMode()" class="hidden px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5">
-        🔒 Khóa Chế độ GV
-      </button>
-      <button type="button" onclick="toggleMute()" id="soundBtn" class="w-10 h-10 rounded-xl border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 text-base transition-all" title="Bật/Tắt âm thanh">
-        🔊
-      </button>
-    </div>
-
-  </div>
-</header>
-
-<main class="max-w-5xl mx-auto px-4 mt-5 space-y-6">
-
-  <!-- Banner thông báo khi đang ở Chế độ Giáo viên -->
-  <div id="teacherBanner" class="hidden bg-slate-900 text-white rounded-2xl p-4 shadow-md flex flex-wrap items-center justify-between gap-3 text-xs">
-    <div class="flex items-center gap-2">
-      <span class="text-lg">🛠️</span>
-      <div>
-        <div class="font-bold text-amber-300">Đang ở Chế độ Giáo viên (Đã mở khóa)</div>
-        <div class="text-slate-400 text-[11px]">Bạn có thể thêm ứng dụng mới, sửa bài, hoặc đổi tên chủ đề trực tiếp.</div>
+    <!-- ================= THANH 5 NÚT CHỌN KHỐI NGANG DUY NHẤT ================= -->
+    <div>
+      <div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+        <span>🔗</span> CHỌN KHỐI LỚP HỌC:
       </div>
-    </div>
-    <div class="flex items-center gap-2">
-      <button type="button" onclick="exportDataToFile()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium">
-        📥 Xuất file JSON
-      </button>
-      <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium cursor-pointer">
-        📤 Nhập file
-        <input type="file" accept=".json" onchange="importDataFromFile(event)" class="hidden">
-      </label>
-    </div>
-  </div>
-
-  <!-- ================= HERO BANNER GRADIENT ================= -->
-  <div class="hero-banner rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-purple-500/10 relative overflow-hidden">
-    <div class="sparkle-shape text-9xl">✨</div>
-    
-    <div class="relative z-10 max-w-xl">
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-extrabold text-amber-200 mb-3 shadow-inner">
-        <span>🌟</span> Chào mừng các nhà thám hiểm nhí!
-      </div>
-      <h2 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight mb-2">
-        Hôm nay lớp mình trải nghiệm ứng dụng gì nào?
-      </h2>
-      <p class="text-sm sm:text-base text-white/90 font-medium">
-        Chạm vào ô Khối của lớp mình để khám phá nhé! 🚀
-      </p>
-    </div>
-  </div>
-
-  <!-- ================= CHỌN NHANH KHỐI LỚP ================= -->
-  <div>
-    <div class="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-400 mb-3">
-      <span>🔗</span> CHỌN NHANH KHỐI LỚP:
-    </div>
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-        <button type="button" onclick="selectQuickGrade(0)" class="py-3 px-4 rounded-2xl bg-white border-2 border-rose-200 hover:border-rose-400 hover:bg-rose-50/40 text-rose-600 font-black text-sm flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
-          <span>🤖</span> Khối 1
-        </button>
-        <button type="button" onclick="selectQuickGrade(1)" class="py-3 px-4 rounded-2xl bg-white border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50/40 text-amber-600 font-black text-sm flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
-          <span>🦁</span> Khối 2
-        </button>
-        <button type="button" onclick="selectQuickGrade(2)" class="py-3 px-4 rounded-2xl bg-white border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/40 text-emerald-600 font-black text-sm flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
-          <span>🚀</span> Khối 3
-        </button>
-        <button type="button" onclick="selectQuickGrade(3)" class="py-3 px-4 rounded-2xl bg-white border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50/40 text-blue-600 font-black text-sm flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
-          <span>💻</span> Khối 4
-        </button>
-        <button type="button" onclick="selectQuickGrade(4)" class="col-span-2 sm:col-span-1 py-3 px-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50/40 text-purple-600 font-black text-sm flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
-          <span>🧠</span> Khối 5
-        </button>
+      <div id="quickNavButtons" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+        <!-- Render bằng JavaScript để xử lý hiệu ứng active -->
       </div>
     </div>
 
-    <!-- ================= DANH SÁCH 5 KHỐI LỚP ================= -->
+    <!-- ================= KHU VỰC HIỂN THỊ DUY NHẤT KHỐI ĐƯỢC CHỌN ================= -->
     <div id="gradesContainer" class="space-y-4"></div>
 
   </main>
 
-  <footer class="max-w-5xl mx-auto px-4 mt-12 text-center text-xs text-slate-400">
-    Hệ thống tài nguyên bài giảng & ứng dụng tương tác AI Tiểu học
+  <footer class="max-w-5xl mx-auto px-4 py-8 text-center text-xs text-slate-400">
+    <p>© 2026 Vui Học Cùng AI • Dành riêng cho học sinh Tiểu học</p>
   </footer>
 
-  <!-- ================= MODAL NHẬP MÃ PIN ================= -->
-  <div id="pinModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100 text-center animate-bounce-short">
-      <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mb-3">
+  <!-- ================= MODAL NHẬP MÃ PIN GIÁO VIÊN ================= -->
+  <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center animate-in fade-in zoom-in duration-200">
+      <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3 shadow-inner">
         🔐
       </div>
-      <h3 class="text-lg font-bold text-slate-900 mb-1">Khu Vực Giáo Viên</h3>
-      <p class="text-xs text-slate-500 mb-4">Nhập mã PIN để mở khóa tính năng thêm/sửa ứng dụng (Mặc định: <b>123456</b>)</p>
+      <h3 class="text-lg font-black text-slate-800 mb-1">Xác Thực Giáo Viên</h3>
+      <p class="text-xs text-slate-500 mb-4">Nhập mã PIN để truy cập quyền quản lý và chỉnh sửa ứng dụng</p>
       
-      <form onsubmit="handlePinSubmit(event)" class="space-y-3">
-        <input type="password" id="pinInput" maxlength="10" placeholder="Nhập mã PIN..." class="w-full text-center tracking-widest text-lg font-bold py-2.5 px-4 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none">
-        <div id="pinError" class="text-rose-500 text-xs font-semibold hidden">Mã PIN không chính xác!</div>
-        <div class="flex gap-2 pt-1">
-          <button type="button" onclick="closePinModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50">Hủy</button>
-          <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200">Mở Khóa</button>
+      <form onsubmit="handlePasswordSubmit(event)" class="space-y-4">
+        <div>
+          <input type="password" id="teacherPinInput" maxlength="10" placeholder="Mã PIN (Mặc định: 123456)" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-center text-lg font-bold tracking-widest focus:border-blue-500 focus:outline-none transition">
+          <p id="pinErrorMessage" class="text-rose-500 text-xs mt-1 font-bold hidden">Mã PIN không đúng, vui lòng thử lại!</p>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="closePasswordModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+            Hủy bỏ
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition">
+            Đăng Nhập
+          </button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- ================= MODAL THÊM / SỬA ỨNG DỤNG ================= -->
-  <div id="lessonModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100">
-      <div class="flex items-center justify-between mb-4">
-        <h3 id="lessonModalTitle" class="text-base font-bold text-slate-900">➕ Thêm Ứng Dụng Mới</h3>
-        <button type="button" onclick="closeLessonModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center">✕</button>
+  <div id="lessonModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 id="lessonModalTitle" class="text-base font-black text-slate-800">Thêm Ứng Dụng Mới</h3>
+        <button type="button" onclick="closeLessonModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-sm font-bold">✕</button>
       </div>
 
-      <form onsubmit="handleLessonSubmit(event)" class="space-y-3.5 text-xs">
+      <form onsubmit="handleLessonSubmit(event)" class="space-y-3.5">
+        <input type="hidden" id="modalGradeIndex">
+        <input type="hidden" id="modalTopicIndex">
+        <input type="hidden" id="modalLessonIndex">
+
+        <!-- Tên bài & tiết -->
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Tên bài & tiết học</label>
-          <input type="text" id="lessonTitleInput" placeholder="Ví dụ: Bài 1 (tiết 2): Dạy máy học hoa quả" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tên bài học & Tiết</label>
+          <input type="text" id="lessonTitleInput" placeholder="Ví dụ: Bài 1 (tiết 1): Phân loại bi màu" class="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none">
         </div>
 
+        <!-- Mô tả ngắn -->
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Mô tả ngắn (không bắt buộc)</label>
-          <input type="text" id="lessonDescInput" placeholder="Mô tả nội dung học sinh sẽ thực hành..." class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Mô tả ngắn (không bắt buộc)</label>
+          <input type="text" id="lessonDescInput" placeholder="Mô tả nội dung học hoặc nhiệm vụ" class="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none">
         </div>
 
+        <!-- Đường link ứng dụng -->
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Đường link ứng dụng (Bắt buộc) <span class="text-rose-500">*</span></label>
-          <input type="url" id="lessonUrlInput" required placeholder="https://..." class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none font-mono">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Link Ứng Dụng / Game <span class="text-rose-500">* (Bắt buộc)</span></label>
+          <input type="url" id="lessonUrlInput" required placeholder="https://soulandskills-phanloaibi.vercel.app/" class="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none font-mono">
         </div>
 
+        <!-- Biểu tượng Emoji -->
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Biểu tượng (Emoji)</label>
-          <div class="flex gap-2">
-            <input type="text" id="lessonIconInput" value="📱" maxlength="2" class="w-14 text-center text-lg py-2 rounded-xl border border-slate-200 focus:outline-none">
-            <div class="flex items-center gap-1.5 text-base">
-              <button type="button" onclick="selectEmoji('📱')" class="p-1 hover:bg-slate-100 rounded">📱</button>
-              <button type="button" onclick="selectEmoji('🎮')" class="p-1 hover:bg-slate-100 rounded">🎮</button>
-              <button type="button" onclick="selectEmoji('🔮')" class="p-1 hover:bg-slate-100 rounded">🔮</button>
-              <button type="button" onclick="selectEmoji('🤖')" class="p-1 hover:bg-slate-100 rounded">🤖</button>
-              <button type="button" onclick="selectEmoji('🎨')" class="p-1 hover:bg-slate-100 rounded">🎨</button>
-              <button type="button" onclick="selectEmoji('🍎')" class="p-1 hover:bg-slate-100 rounded">🍎</button>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Biểu tượng</label>
+          <div class="flex items-center gap-2">
+            <input type="text" id="lessonIconInput" value="🎮" maxlength="4" class="w-14 text-center px-2 py-2 text-xl border border-slate-200 rounded-xl">
+            <div class="flex gap-1.5 overflow-x-auto py-1">
+              <button type="button" onclick="selectEmoji('🎮')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">🎮</button>
+              <button type="button" onclick="selectEmoji('🤖')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">🤖</button>
+              <button type="button" onclick="selectEmoji('🧩')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">🧩</button>
+              <button type="button" onclick="selectEmoji('🎨')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">🎨</button>
+              <button type="button" onclick="selectEmoji('🚀')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">🚀</button>
+              <button type="button" onclick="selectEmoji('⭐')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm">⭐</button>
             </div>
           </div>
         </div>
 
         <div class="flex gap-2 pt-2">
-          <button type="button" onclick="closeLessonModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Hủy</button>
-          <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-200">Lưu Ứng Dụng</button>
+          <button type="button" onclick="closeLessonModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+            Hủy
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition">
+            Lưu Ứng Dụng
+          </button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- ================= MODAL SỬA TÊN CHỦ ĐỀ ================= -->
-  <div id="topicModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base font-bold text-slate-900">✏️ Đổi Tên Chủ Đề</h3>
-        <button type="button" onclick="closeTopicModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center">✕</button>
+  <div id="topicModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="text-base font-black text-slate-800">Đổi Tên Chủ Đề</h3>
+        <button type="button" onclick="closeTopicModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-sm font-bold">✕</button>
       </div>
-      <form onsubmit="handleTopicSubmit(event)" class="space-y-3 text-xs">
+
+      <form onsubmit="handleTopicSubmit(event)" class="space-y-4">
+        <input type="hidden" id="topicGradeIndex">
+        <input type="hidden" id="topicTopicIndex">
+
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Tên chủ đề mới</label>
-          <input type="text" id="topicTitleInput" required placeholder="Ví dụ: Chủ đề 1: Nhận diện hình ảnh" class="w-full py-2.5 px-3.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none text-sm font-semibold">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tên mới cho chủ đề</label>
+          <input type="text" id="topicTitleInput" required class="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none">
         </div>
-        <div class="flex gap-2 pt-2">
-          <button type="button" onclick="closeTopicModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Hủy</button>
-          <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-200">Lưu Tên</button>
+
+        <div class="flex gap-2">
+          <button type="button" onclick="closeTopicModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+            Hủy
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition">
+            Lưu Tên
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ================= JAVASCRIPT THUẦN ================= -->
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
-    // =========================================================================
-    // HƯỚNG DẪN TỰ SỬA CODE MỖI NGÀY (CỰC KỲ ĐƠN GIẢN, CHỈ CẦN 4 DÒNG):
-    //
-    // Khi muốn thêm 1 ứng dụng vào Khối nào, Chủ đề nào:
-    // Bạn chỉ cần tìm đúng Khối và Chủ đề đó trong mảng APP_DATA dưới đây,
-    // rồi copy 4 dòng này vào mảng `lessons: [ ... ]`:
-    //
-    //   {
-    //     title: "Tên bài và tiết học",
-    //     desc: "Mô tả ngắn của ứng dụng",
-    //     url: "https://link-ung-dung.vercel.app/",
-    //     icon: "📱"
-    //   },
-    // =========================================================================
+    // Dữ liệu mặc định ban đầu
     var DEFAULT_DATA = [
       {
-        grade: 1,
+        id: "grade-1",
         title: "Khối 1: Vui Học Cùng AI",
         tag: "ROBOT NHÍ",
         icon: "🤖",
@@ -249,9 +241,9 @@
             lessons: [
               {
                 title: "Bài 1 (tiết 1): Phân loại bi màu",
-                desc: "Dạy máy tính nhận diện và phân chia bi theo màu sắc",
+                desc: "Thực hành nhận diện và phân loại đồ vật thông minh",
                 url: "https://soulandskills-phanloaibi.vercel.app/",
-                icon: "🔮"
+                icon: "🎮"
               }
             ]
           },
@@ -261,7 +253,7 @@
         ]
       },
       {
-        grade: 2,
+        id: "grade-2",
         title: "Khối 2: Vui Học Cùng AI",
         tag: "KHÁM PHÁ",
         icon: "🦁",
@@ -274,7 +266,7 @@
         ]
       },
       {
-        grade: 3,
+        id: "grade-3",
         title: "Khối 3: Vui Học Cùng AI",
         tag: "KHOA HỌC",
         icon: "🚀",
@@ -287,7 +279,7 @@
         ]
       },
       {
-        grade: 4,
+        id: "grade-4",
         title: "Khối 4: Vui Học Cùng AI",
         tag: "LẬP TRÌNH",
         icon: "💻",
@@ -300,7 +292,7 @@
         ]
       },
       {
-        grade: 5,
+        id: "grade-5",
         title: "Khối 5: Vui Học Cùng AI",
         tag: "TRÍ TUỆ MÁY",
         icon: "🧠",
@@ -314,196 +306,208 @@
       }
     ];
 
-    var STORAGE_KEY = "vui_hoc_ai_chay_v1";
-    var APP_DATA = loadData();
+    // Cấu hình bảng màu giao diện cho 5 Khối
+    var THEME_STYLES = {
+      rose: {
+        border: 'border-rose-400',
+        headerOpen: 'bg-rose-500 text-white',
+        tagOpen: 'bg-white/20 text-white',
+        btnPlay: 'bg-rose-500 hover:bg-rose-600 text-white'
+      },
+      amber: {
+        border: 'border-amber-400',
+        headerOpen: 'bg-amber-500 text-white',
+        tagOpen: 'bg-white/20 text-white',
+        btnPlay: 'bg-amber-500 hover:bg-amber-600 text-white'
+      },
+      emerald: {
+        border: 'border-emerald-400',
+        headerOpen: 'bg-emerald-500 text-white',
+        tagOpen: 'bg-white/20 text-white',
+        btnPlay: 'bg-emerald-500 hover:bg-emerald-600 text-white'
+      },
+      blue: {
+        border: 'border-blue-400',
+        headerOpen: 'bg-blue-500 text-white',
+        tagOpen: 'bg-white/20 text-white',
+        btnPlay: 'bg-blue-500 hover:bg-blue-600 text-white'
+      },
+      purple: {
+        border: 'border-purple-400',
+        headerOpen: 'bg-purple-500 text-white',
+        tagOpen: 'bg-white/20 text-white',
+        btnPlay: 'bg-purple-500 hover:bg-purple-600 text-white'
+      }
+    };
 
+    var STORAGE_KEY = 'vui_hoc_ai_data_clean_v1';
+    var PIN_STORAGE_KEY = 'vui_hoc_ai_teacher_pin';
+
+    // Biến trạng thái
+    var APP_DATA = loadData();
+    var activeGradeIndex = 0; // Mặc định mở Khối 1
+    var activeTopicKey = null; // Tất cả chủ đề ban đầu đều gập gọn
+    var isTeacherMode = false;
+    var soundEnabled = true;
+
+    // Quản lý lưu trữ
     function loadData() {
       try {
         var saved = localStorage.getItem(STORAGE_KEY);
         if (saved) return JSON.parse(saved);
-      } catch (e) {}
-      return JSON.parse(JSON.stringify(DEFAULT_DATA));
+      } catch (e) {
+        console.error(e);
+      }
+      return DEFAULT_DATA;
     }
 
     function saveData() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_DATA));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Âm thanh Web Audio API
+    function playTone(freq, duration) {
+      if (!soundEnabled) return;
+      try {
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        var ctx = new AudioContext();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
       } catch (e) {}
     }
 
-    // Cấu hình màu sắc theo Khối
-    var THEME_STYLES = {
-      rose: {
-        border: "border-rose-200",
-        tagBg: "bg-rose-100 text-rose-600",
-        iconBg: "bg-rose-50 text-rose-500",
-        headerOpen: "bg-gradient-to-r from-rose-500 to-red-500 text-white",
-        tagOpen: "bg-white/20 text-white",
-        btnPlay: "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-200",
-        arrowBg: "bg-white/20 text-white"
-      },
-      amber: {
-        border: "border-amber-200",
-        tagBg: "bg-amber-100 text-amber-700",
-        iconBg: "bg-amber-50 text-amber-600",
-        headerOpen: "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
-        tagOpen: "bg-white/20 text-white",
-        btnPlay: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-200",
-        arrowBg: "bg-white/20 text-white"
-      },
-      emerald: {
-        border: "border-emerald-200",
-        tagBg: "bg-emerald-100 text-emerald-700",
-        iconBg: "bg-emerald-50 text-emerald-600",
-        headerOpen: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
-        tagOpen: "bg-white/20 text-white",
-        btnPlay: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200",
-        arrowBg: "bg-white/20 text-white"
-      },
-      blue: {
-        border: "border-blue-200",
-        tagBg: "bg-blue-100 text-blue-700",
-        iconBg: "bg-blue-50 text-blue-600",
-        headerOpen: "bg-gradient-to-r from-blue-500 to-indigo-500 text-white",
-        tagOpen: "bg-white/20 text-white",
-        btnPlay: "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-200",
-        arrowBg: "bg-white/20 text-white"
-      },
-      purple: {
-        border: "border-purple-200",
-        tagBg: "bg-purple-100 text-purple-700",
-        iconBg: "bg-purple-50 text-purple-600",
-        headerOpen: "bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white",
-        tagOpen: "bg-white/20 text-white",
-        btnPlay: "bg-purple-500 hover:bg-purple-600 text-white shadow-purple-200",
-        arrowBg: "bg-white/20 text-white"
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      var btn = document.getElementById('soundToggleBtn');
+      if (btn) {
+        btn.innerText = soundEnabled ? '🔊' : '🔇';
       }
-    };
+    }
 
-    var activeGradeIndex = null;
-    var activeTopicKey = null;
-    var isMuted = false;
-    var isTeacherMode = false;
-    var teacherPin = "123456";
-
-    // Xử lý chạm 3 lần vào Robot
+    // Nhận diện bấm 3 lần vào Robot để mở modal Giáo viên
     var robotClickCount = 0;
     var robotClickTimer = null;
 
-    function handleRobotClick() {
-      playTone(600, 0.05);
+    function handleSecretRobotClick() {
       robotClickCount++;
-      
-      // Hiệu ứng nháy
-      var robot = document.getElementById('robotTrigger');
-      if (robot) {
-        robot.classList.add('scale-110');
-        setTimeout(function() { robot.classList.remove('scale-110'); }, 150);
+      playTone(400 + robotClickCount * 120, 0.05);
+
+      var btn = document.getElementById('secretRobotBtn');
+      if (btn) {
+        btn.classList.add('scale-110');
+        setTimeout(function() { btn.classList.remove('scale-110'); }, 150);
       }
 
-      clearTimeout(robotClickTimer);
-      robotClickTimer = setTimeout(function() {
-        robotClickCount = 0;
-      }, 1500);
+      if (robotClickTimer) clearTimeout(robotClickTimer);
 
       if (robotClickCount >= 3) {
         robotClickCount = 0;
-        openPinModal();
+        openPasswordModal();
+      } else {
+        robotClickTimer = setTimeout(function() {
+          robotClickCount = 0;
+        }, 1500);
       }
     }
 
-    function openPinModal() {
-      var modal = document.getElementById('pinModal');
-      var input = document.getElementById('pinInput');
-      var err = document.getElementById('pinError');
-      if (err) err.classList.add('hidden');
-      if (input) input.value = '';
-      if (modal) modal.classList.remove('hidden');
-      setTimeout(function() { if (input) input.focus(); }, 100);
+    function openPasswordModal() {
+      document.getElementById('teacherPinInput').value = '';
+      document.getElementById('pinErrorMessage').classList.add('hidden');
+      document.getElementById('passwordModal').classList.remove('hidden');
+      setTimeout(function() {
+        document.getElementById('teacherPinInput').focus();
+      }, 100);
     }
 
-    function closePinModal() {
-      var modal = document.getElementById('pinModal');
-      if (modal) modal.classList.add('hidden');
+    function closePasswordModal() {
+      document.getElementById('passwordModal').classList.add('hidden');
     }
 
-    function handlePinSubmit(e) {
+    function handlePasswordSubmit(e) {
       e.preventDefault();
-      var input = document.getElementById('pinInput');
-      var err = document.getElementById('pinError');
-      if (!input) return;
+      var inputPin = document.getElementById('teacherPinInput').value.trim();
+      var savedPin = localStorage.getItem(PIN_STORAGE_KEY) || '123456';
 
-      if (input.value === teacherPin) {
+      if (inputPin === savedPin) {
         isTeacherMode = true;
-        closePinModal();
-        playTone(800, 0.1);
-        updateTeacherUI();
+        closePasswordModal();
+        document.getElementById('teacherBanner').classList.remove('hidden');
         renderPortal();
+        playTone(700, 0.15);
       } else {
-        if (err) err.classList.remove('hidden');
+        document.getElementById('pinErrorMessage').classList.remove('hidden');
         playTone(250, 0.2);
       }
     }
 
     function exitTeacherMode() {
       isTeacherMode = false;
-      updateTeacherUI();
+      document.getElementById('teacherBanner').classList.add('hidden');
       renderPortal();
     }
 
-    function updateTeacherUI() {
-      var banner = document.getElementById('teacherBanner');
-      var exitBtn = document.getElementById('exitTeacherBtn');
-      if (banner) banner.classList.toggle('hidden', !isTeacherMode);
-      if (exitBtn) exitBtn.classList.toggle('hidden', !isTeacherMode);
+    // Modal Sửa tên Chủ đề
+    function openEditTopicModal(gIdx, tIdx) {
+      document.getElementById('topicGradeIndex').value = gIdx;
+      document.getElementById('topicTopicIndex').value = tIdx;
+      document.getElementById('topicTitleInput').value = APP_DATA[gIdx].topics[tIdx].title;
+      document.getElementById('topicModal').classList.remove('hidden');
     }
 
-    // Hiệu ứng âm thanh nhẹ Web Audio API
-    function playTone(freq, dur) {
-      if (isMuted) return;
-      try {
-        var AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        var ctx = new AC();
-        var osc = ctx.createOscillator();
-        var gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.06, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + dur);
-        osc.start();
-        osc.stop(ctx.currentTime + dur);
-      } catch (e) {}
+    function closeTopicModal() {
+      document.getElementById('topicModal').classList.add('hidden');
     }
 
-    function toggleMute() {
-      isMuted = !isMuted;
-      var btn = document.getElementById('soundBtn');
-      if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+    function handleTopicSubmit(e) {
+      e.preventDefault();
+      var gIdx = parseInt(document.getElementById('topicGradeIndex').value);
+      var tIdx = parseInt(document.getElementById('topicTopicIndex').value);
+      var newTitle = document.getElementById('topicTitleInput').value.trim();
+
+      if (newTitle && APP_DATA[gIdx] && APP_DATA[gIdx].topics[tIdx]) {
+        APP_DATA[gIdx].topics[tIdx].title = newTitle;
+        saveData();
+        closeTopicModal();
+        renderPortal();
+      }
     }
 
-    // Quản lý Modal thêm/sửa ứng dụng
-    var currentEditingLocation = { gIdx: null, tIdx: null, lIdx: null };
-
+    // Modal Thêm / Sửa Ứng dụng
     function openAddLessonModal(gIdx, tIdx) {
-      currentEditingLocation = { gIdx: gIdx, tIdx: tIdx, lIdx: null };
-      document.getElementById('lessonModalTitle').textContent = '➕ Thêm Ứng Dụng Mới';
+      document.getElementById('lessonModalTitle').innerText = 'Thêm Ứng Dụng Mới';
+      document.getElementById('modalGradeIndex').value = gIdx;
+      document.getElementById('modalTopicIndex').value = tIdx;
+      document.getElementById('modalLessonIndex').value = '-1';
       document.getElementById('lessonTitleInput').value = '';
       document.getElementById('lessonDescInput').value = '';
       document.getElementById('lessonUrlInput').value = '';
-      document.getElementById('lessonIconInput').value = '📱';
+      document.getElementById('lessonIconInput').value = '🎮';
       document.getElementById('lessonModal').classList.remove('hidden');
     }
 
     function openEditLessonModal(gIdx, tIdx, lIdx) {
-      currentEditingLocation = { gIdx: gIdx, tIdx: tIdx, lIdx: lIdx };
       var lesson = APP_DATA[gIdx].topics[tIdx].lessons[lIdx];
-      document.getElementById('lessonModalTitle').textContent = '✏️ Sửa Ứng Dụng';
-      document.getElementById('lessonTitleInput').value = lesson.title || '';
+      document.getElementById('lessonModalTitle').innerText = 'Chỉnh Sửa Ứng Dụng';
+      document.getElementById('modalGradeIndex').value = gIdx;
+      document.getElementById('modalTopicIndex').value = tIdx;
+      document.getElementById('modalLessonIndex').value = lIdx;
+      document.getElementById('lessonTitleInput').value = lesson.title;
       document.getElementById('lessonDescInput').value = lesson.desc || '';
-      document.getElementById('lessonUrlInput').value = lesson.url || '';
-      document.getElementById('lessonIconInput').value = lesson.icon || '📱';
+      document.getElementById('lessonUrlInput').value = lesson.url;
+      document.getElementById('lessonIconInput').value = lesson.icon || '🎮';
       document.getElementById('lessonModal').classList.remove('hidden');
     }
 
@@ -511,27 +515,28 @@
       document.getElementById('lessonModal').classList.add('hidden');
     }
 
-    function selectEmoji(emoji) {
-      document.getElementById('lessonIconInput').value = emoji;
-    }
-
     function handleLessonSubmit(e) {
       e.preventDefault();
+      var gIdx = parseInt(document.getElementById('modalGradeIndex').value);
+      var tIdx = parseInt(document.getElementById('modalTopicIndex').value);
+      var lIdx = parseInt(document.getElementById('modalLessonIndex').value);
+
+      var url = document.getElementById('lessonUrlInput').value.trim();
       var title = document.getElementById('lessonTitleInput').value.trim() || 'Ứng dụng thực hành';
       var desc = document.getElementById('lessonDescInput').value.trim();
-      var url = document.getElementById('lessonUrlInput').value.trim();
-      var icon = document.getElementById('lessonIconInput').value.trim() || '📱';
+      var icon = document.getElementById('lessonIconInput').value.trim() || '🎮';
 
-      var g = currentEditingLocation.gIdx;
-      var t = currentEditingLocation.tIdx;
-      var l = currentEditingLocation.lIdx;
+      if (!url) return;
 
-      if (l === null) {
-        // Thêm mới
-        APP_DATA[g].topics[t].lessons.push({ title: title, desc: desc, url: url, icon: icon });
+      var newLesson = { title: title, desc: desc, url: url, icon: icon };
+
+      if (lIdx === -1) {
+        if (!APP_DATA[gIdx].topics[tIdx].lessons) {
+          APP_DATA[gIdx].topics[tIdx].lessons = [];
+        }
+        APP_DATA[gIdx].topics[tIdx].lessons.push(newLesson);
       } else {
-        // Sửa
-        APP_DATA[g].topics[t].lessons[l] = { title: title, desc: desc, url: url, icon: icon };
+        APP_DATA[gIdx].topics[tIdx].lessons[lIdx] = newLesson;
       }
 
       saveData();
@@ -540,46 +545,15 @@
     }
 
     function deleteLesson(gIdx, tIdx, lIdx) {
-      var item = APP_DATA[gIdx].topics[tIdx].lessons[lIdx];
-      if (confirm('Bạn có chắc muốn xóa ứng dụng "' + item.title + '" không?')) {
+      if (confirm('Bạn có chắc chắn muốn xóa ứng dụng này không?')) {
         APP_DATA[gIdx].topics[tIdx].lessons.splice(lIdx, 1);
         saveData();
         renderPortal();
       }
     }
 
-    // Quản lý Modal sửa tên chủ đề
-    var currentEditingTopic = { gIdx: null, tIdx: null };
-
-    function openEditTopicModal(gIdx, tIdx) {
-      currentEditingTopic = { gIdx: gIdx, tIdx: tIdx };
-      var currentTitle = APP_DATA[gIdx].topics[tIdx].title || '';
-      var input = document.getElementById('topicTitleInput');
-      if (input) input.value = currentTitle;
-      var modal = document.getElementById('topicModal');
-      if (modal) modal.classList.remove('hidden');
-      setTimeout(function() { if (input) input.focus(); }, 100);
-    }
-
-    function closeTopicModal() {
-      var modal = document.getElementById('topicModal');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function handleTopicSubmit(e) {
-      e.preventDefault();
-      var input = document.getElementById('topicTitleInput');
-      if (!input) return;
-      var newTitle = input.value.trim();
-      var g = currentEditingTopic.gIdx;
-      var t = currentEditingTopic.tIdx;
-
-      if (g !== null && t !== null && newTitle) {
-        APP_DATA[g].topics[t].title = newTitle;
-        saveData();
-        closeTopicModal();
-        renderPortal();
-      }
+    function selectEmoji(emoji) {
+      document.getElementById('lessonIconInput').value = emoji;
     }
 
     // Xuất / Nhập JSON
@@ -613,146 +587,179 @@
       reader.readAsText(file);
     }
 
-    // Render danh sách Khối & Chủ đề
+    // Render giao diện
     function renderPortal() {
+      renderQuickButtons();
+      renderActiveGradeContent();
+    }
+
+    function renderQuickButtons() {
+      var nav = document.getElementById('quickNavButtons');
+      if (!nav) return;
+      nav.innerHTML = '';
+
+      var btnConfigs = [
+        { label: 'Khối 1', icon: '🤖', border: 'border-rose-200', text: 'text-rose-600', activeBg: 'bg-rose-500 text-white border-rose-500' },
+        { label: 'Khối 2', icon: '🦁', border: 'border-amber-200', text: 'text-amber-600', activeBg: 'bg-amber-500 text-white border-amber-500' },
+        { label: 'Khối 3', icon: '🚀', border: 'border-emerald-200', text: 'text-emerald-600', activeBg: 'bg-emerald-500 text-white border-emerald-500' },
+        { label: 'Khối 4', icon: '💻', border: 'border-blue-200', text: 'text-blue-600', activeBg: 'bg-blue-500 text-white border-blue-500' },
+        { label: 'Khối 5', icon: '🧠', border: 'border-purple-200', text: 'text-purple-600', activeBg: 'bg-purple-500 text-white border-purple-500' }
+      ];
+
+      btnConfigs.forEach(function(cfg, idx) {
+        var isSelected = (activeGradeIndex === idx);
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = function() { toggleSelectGrade(idx); };
+
+        var baseCls = 'py-3 px-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-xs active:scale-95 ';
+        if (idx === 4) baseCls += 'col-span-2 sm:col-span-1 ';
+
+        if (isSelected) {
+          btn.className = baseCls + cfg.activeBg + ' shadow-md scale-102';
+        } else {
+          btn.className = baseCls + 'bg-white ' + cfg.border + ' ' + cfg.text + ' hover:bg-slate-50';
+        }
+
+        btn.innerHTML = '<span>' + cfg.icon + '</span> ' + cfg.label;
+        nav.appendChild(btn);
+      });
+    }
+
+    function renderActiveGradeContent() {
       var container = document.getElementById('gradesContainer');
       if (!container) return;
       container.innerHTML = '';
 
-      APP_DATA.forEach(function(item, gIdx) {
-        var isOpen = (activeGradeIndex === gIdx);
-        var st = THEME_STYLES[item.theme] || THEME_STYLES.rose;
+      if (activeGradeIndex === null || !APP_DATA[activeGradeIndex]) {
+        container.innerHTML = 
+          '<div class="bg-white rounded-3xl p-8 border border-dashed border-slate-200 text-center text-slate-400 font-semibold text-xs">' +
+            '👆 Chạm vào một trong các ô Khối ở trên để bắt đầu bài học!' +
+          '</div>';
+        return;
+      }
 
-        var totalLessons = item.topics.reduce(function(acc, t) {
-          return acc + (t.lessons ? t.lessons.length : 0);
-        }, 0);
+      var gIdx = activeGradeIndex;
+      var item = APP_DATA[gIdx];
+      var st = THEME_STYLES[item.theme] || THEME_STYLES.rose;
 
-        var gradeCard = document.createElement('div');
-        gradeCard.className = 'bg-white rounded-3xl border-2 ' + st.border + ' overflow-hidden shadow-sm transition-all duration-300';
+      var totalLessons = item.topics.reduce(function(acc, t) {
+        return acc + (t.lessons ? t.lessons.length : 0);
+      }, 0);
 
-        var bodyHtml = '';
+      var gradeCard = document.createElement('div');
+      gradeCard.className = 'bg-white rounded-3xl border-2 ' + st.border + ' overflow-hidden shadow-sm transition-all duration-300';
 
-        if (isOpen) {
-          bodyHtml = '<div class="p-4 sm:p-5 bg-white space-y-3">';
+      var bodyHtml = '<div class="p-4 sm:p-5 bg-white space-y-3">';
 
-          item.topics.forEach(function(topic, tIdx) {
-            var topicKey = gIdx + '-' + tIdx;
-            var isTopicOpen = (activeTopicKey === topicKey);
-            var lessonCount = topic.lessons ? topic.lessons.length : 0;
+      item.topics.forEach(function(topic, tIdx) {
+        var topicKey = gIdx + '-' + tIdx;
+        var isTopicOpen = (activeTopicKey === topicKey);
+        var lessonCount = topic.lessons ? topic.lessons.length : 0;
 
-            var lessonsGridHtml = '';
-            if (isTopicOpen) {
-              lessonsGridHtml = '<div class="p-4 border-t border-slate-100 bg-slate-50/50">' +
-                '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">';
+        var lessonsGridHtml = '';
+        if (isTopicOpen) {
+          lessonsGridHtml = '<div class="p-4 border-t border-slate-100 bg-slate-50/50">' +
+            '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">';
 
-              if (lessonCount > 0) {
-                topic.lessons.forEach(function(lesson, lIdx) {
-                  var adminTools = '';
-                  if (isTeacherMode) {
-                    adminTools = 
-                      '<div class="flex items-center gap-1.5 mb-2 justify-end">' +
-                        '<button type="button" onclick="openEditLessonModal(' + gIdx + ',' + tIdx + ',' + lIdx + ')" class="p-1 rounded hover:bg-slate-100 text-slate-500 text-xs" title="Sửa">✏️</button>' +
-                        '<button type="button" onclick="deleteLesson(' + gIdx + ',' + tIdx + ',' + lIdx + ')" class="p-1 rounded hover:bg-rose-50 text-rose-500 text-xs" title="Xóa">🗑️</button>' +
-                      '</div>';
-                  }
-
-                  lessonsGridHtml += 
-                    '<div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative group">' +
-                      '<div>' +
-                        adminTools +
-                        '<div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl mb-2.5">' + 
-                          (lesson.icon || '📱') + 
-                        '</div>' +
-                        '<h4 class="font-bold text-slate-800 text-sm mb-1 leading-snug line-clamp-2">' + lesson.title + '</h4>' +
-                        (lesson.desc ? '<p class="text-[11px] text-slate-400 font-medium mb-3 line-clamp-2">' + lesson.desc + '</p>' : '<div class="mb-3"></div>') +
-                      '</div>' +
-                      '<a href="' + lesson.url + '" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 ' + st.btnPlay + ' text-xs font-black text-center rounded-xl shadow-sm block transition-all flex items-center justify-center gap-1.5 active:scale-95">' +
-                        '<span>▶ MỞ ỨNG DỤNG</span>' +
-                      '</a>' +
-                    '</div>';
-                });
-              }
-
-              // Ô Thêm ứng dụng khi ở Chế độ Giáo viên
+          if (lessonCount > 0) {
+            topic.lessons.forEach(function(lesson, lIdx) {
+              var adminTools = '';
               if (isTeacherMode) {
-                lessonsGridHtml += 
-                  '<button type="button" onclick="openAddLessonModal(' + gIdx + ',' + tIdx + ')" class="border-2 border-dashed border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50/50 rounded-2xl p-4 flex flex-col items-center justify-center text-indigo-600 transition-all min-h-[160px]">' +
-                    '<span class="text-2xl mb-1">➕</span>' +
-                    '<span class="font-bold text-xs">Thêm Ứng Dụng Mới</span>' +
-                  '</button>';
-              } else if (lessonCount === 0) {
-                lessonsGridHtml += '<div class="col-span-full py-6 text-center text-slate-400 text-xs font-semibold">📱 Ứng dụng đang được cập nhật...</div>';
+                adminTools = 
+                  '<div class="flex items-center gap-1.5 mb-2 justify-end">' +
+                    '<button type="button" onclick="openEditLessonModal(' + gIdx + ',' + tIdx + ',' + lIdx + ')" class="p-1 rounded hover:bg-slate-100 text-slate-500 text-xs" title="Sửa">✏️</button>' +
+                    '<button type="button" onclick="deleteLesson(' + gIdx + ',' + tIdx + ',' + lIdx + ')" class="p-1 rounded hover:bg-rose-50 text-rose-500 text-xs" title="Xóa">🗑️</button>' +
+                  '</div>';
               }
 
-              lessonsGridHtml += '</div></div>';
-            }
-
-            var topicActions = '';
-            if (isTeacherMode) {
-              topicActions = 
-                '<button type="button" onclick="event.stopPropagation(); openEditTopicModal(' + gIdx + ',' + tIdx + ')" class="text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg font-bold transition-all shadow-xs">' +
-                  '✏️ Sửa tên' +
-                '</button>';
-            }
-
-            bodyHtml += 
-              '<div class="rounded-2xl border border-slate-200/90 overflow-hidden bg-white shadow-sm">' +
-                '<div onclick="toggleTopic(' + gIdx + ', ' + tIdx + ')" class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors select-none">' +
-                  '<div class="flex items-center gap-3">' +
-                    '<div class="w-7 h-7 rounded-lg bg-slate-100 font-black text-xs text-slate-700 flex items-center justify-center">' + 
-                      (tIdx + 1) + 
+              lessonsGridHtml += 
+                '<div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative group">' +
+                  '<div>' +
+                    adminTools +
+                    '<div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl mb-2.5">' + 
+                      (lesson.icon || '📱') + 
                     '</div>' +
-                    '<span class="font-bold text-slate-800 text-sm">' + topic.title + '</span>' +
-                    '<span class="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">' + lessonCount + ' bài</span>' +
+                    '<h4 class="font-bold text-slate-800 text-sm mb-1 leading-snug line-clamp-2">' + lesson.title + '</h4>' +
+                    (lesson.desc ? '<p class="text-[11px] text-slate-400 font-medium mb-3 line-clamp-2">' + lesson.desc + '</p>' : '<div class="mb-3"></div>') +
                   '</div>' +
-                  '<div class="flex items-center gap-2">' +
-                    topicActions +
-                    '<div class="text-slate-400 text-xs transition-transform ' + (isTopicOpen ? 'rotate-180' : '') + '">▼</div>' +
-                  '</div>' +
-                '</div>' +
-                lessonsGridHtml +
-              '</div>';
-          });
+                  '<a href="' + lesson.url + '" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 ' + st.btnPlay + ' text-xs font-bold text-center rounded-xl shadow-xs block transition-all flex items-center justify-center gap-1.5 active:scale-95">' +
+                    '<span>▶ MỞ ỨNG DỤNG</span>' +
+                  '</a>' +
+                '</div>';
+            });
+          }
 
-          bodyHtml += '</div>';
+          // Ô Thêm ứng dụng khi ở Chế độ Giáo viên
+          if (isTeacherMode) {
+            lessonsGridHtml += 
+              '<button type="button" onclick="openAddLessonModal(' + gIdx + ',' + tIdx + ')" class="border-2 border-dashed border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50/50 rounded-2xl p-4 flex flex-col items-center justify-center text-indigo-600 transition-all min-h-[160px]">' +
+                '<span class="text-2xl mb-1">➕</span>' +
+                '<span class="font-bold text-xs">Thêm Ứng Dụng Mới</span>' +
+              '</button>';
+          } else if (lessonCount === 0) {
+            lessonsGridHtml += '<div class="col-span-full py-6 text-center text-slate-400 text-xs font-semibold">📱 Ứng dụng đang được cập nhật...</div>';
+          }
+
+          lessonsGridHtml += '</div></div>';
         }
 
-        var headerClass = isOpen ? 
-          st.headerOpen + ' p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none' : 
-          'bg-white p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none hover:bg-slate-50/50';
+        var topicActions = '';
+        if (isTeacherMode) {
+          topicActions = 
+            '<button type="button" onclick="event.stopPropagation(); openEditTopicModal(' + gIdx + ',' + tIdx + ')" class="text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg font-bold transition-all">' +
+              '✏️ Sửa tên' +
+            '</button>';
+        }
 
-        var tagClass = isOpen ? st.tagOpen : st.tagBg;
-        var iconWrapClass = isOpen ? 'bg-white/20' : st.iconBg;
-        var arrowClass = isOpen ? st.arrowBg : 'bg-slate-100 text-slate-500';
-
-        gradeCard.innerHTML = 
-          '<div onclick="toggleGrade(' + gIdx + ')" class="' + headerClass + '">' +
-            '<div class="flex items-center gap-3.5">' +
-              '<div class="w-12 h-12 rounded-2xl ' + iconWrapClass + ' flex items-center justify-center text-2xl shadow-sm">' +
-                item.icon +
-              '</div>' +
-              '<div>' +
-                '<div class="flex items-center gap-2 mb-0.5">' +
-                  '<span class="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-md ' + tagClass + '">' +
-                    item.tag +
-                  '</span>' +
-                  '<span class="text-xs font-semibold ' + (isOpen ? 'text-white/80' : 'text-slate-400') + '">' + totalLessons + ' bài học</span>' +
+        bodyHtml += 
+          '<div class="rounded-2xl border border-slate-200/90 overflow-hidden bg-white shadow-xs">' +
+            '<div onclick="toggleTopic(' + gIdx + ', ' + tIdx + ')" class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors select-none">' +
+              '<div class="flex items-center gap-3">' +
+                '<div class="w-7 h-7 rounded-lg bg-slate-100 font-bold text-xs text-slate-700 flex items-center justify-center">' + 
+                  (tIdx + 1) + 
                 '</div>' +
-                '<h3 class="text-base sm:text-xl font-extrabold tracking-tight">' + item.title + '</h3>' +
+                '<span class="font-bold text-slate-800 text-sm">' + topic.title + '</span>' +
+                '<span class="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">' + lessonCount + ' bài</span>' +
+              '</div>' +
+              '<div class="flex items-center gap-2">' +
+                topicActions +
+                '<div class="text-slate-400 text-xs transition-transform ' + (isTopicOpen ? 'rotate-180' : '') + '">▼</div>' +
               '</div>' +
             '</div>' +
-            '<div class="w-9 h-9 rounded-xl ' + arrowClass + ' flex items-center justify-center text-xs font-black transition-transform duration-200 ' + (isOpen ? 'rotate-180' : '') + '">' +
-              '▼' +
+            lessonsGridHtml +
+          '</div>';
+      });
+
+      bodyHtml += '</div>';
+
+      gradeCard.innerHTML = 
+        '<div class="' + st.headerOpen + ' p-4 sm:p-5 flex items-center justify-between select-none">' +
+          '<div class="flex items-center gap-3.5">' +
+            '<div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl shadow-xs">' +
+              item.icon +
+            '</div>' +
+            '<div>' +
+              '<div class="flex items-center gap-2 mb-0.5">' +
+                '<span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md ' + st.tagOpen + '">' +
+                  item.tag +
+                '</span>' +
+                '<span class="text-xs font-semibold text-white/80">' + totalLessons + ' bài học</span>' +
+              '</div>' +
+              '<h3 class="text-base sm:text-xl font-black tracking-tight">' + item.title + '</h3>' +
             '</div>' +
           '</div>' +
-          bodyHtml;
+          '<button type="button" onclick="closeActiveGrade()" class="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white text-xs font-bold transition-all" title="Đóng khối">' +
+            '✕' +
+          '</button>' +
+        '</div>' +
+        bodyHtml;
 
-        container.appendChild(gradeCard);
-      });
+      container.appendChild(gradeCard);
     }
 
-    function toggleGrade(gIdx) {
-      playTone(450, 0.05);
+    function toggleSelectGrade(gIdx) {
+      playTone(500, 0.05);
       if (activeGradeIndex === gIdx) {
         activeGradeIndex = null;
         activeTopicKey = null;
@@ -761,18 +768,17 @@
         activeTopicKey = null;
       }
       renderPortal();
+
+      var container = document.getElementById('gradesContainer');
+      if (container && activeGradeIndex !== null) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }
 
-    function selectQuickGrade(gIdx) {
-      activeGradeIndex = gIdx;
+    function closeActiveGrade() {
+      activeGradeIndex = null;
       activeTopicKey = null;
-      playTone(500, 0.06);
       renderPortal();
-      
-      var container = document.getElementById('gradesContainer');
-      if (container && container.children[gIdx]) {
-        container.children[gIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
     }
 
     function toggleTopic(gIdx, tIdx) {
@@ -782,6 +788,7 @@
       renderPortal();
     }
 
+    // Khởi chạy khi tài liệu tải xong
     window.onload = function() {
       renderPortal();
     };
